@@ -7,6 +7,7 @@ import axios from 'axios';
 // Components
 import Spinner from 'react-bootstrap/Spinner';
 import Navigation from './components/Navigation';
+import Camera from './components/Camera';
 
 // ABIs
 import NFT from './abis/NFT.json'
@@ -27,8 +28,7 @@ function App() {
   const [message, setMessage] = useState("")
   const [isWaiting, setIsWaiting] = useState(false)
 
-  const [isMintEnabled, setIsMintEnabled] = useState(false)
-
+  const [mode, setMode] = useState("camera");
 
   const loadBlockchainData = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum)
@@ -67,7 +67,8 @@ function App() {
     setMessage("Generating Image...")
 
     // You can replace this with different model API's
-    const URL = `https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2`
+    // const URL = `https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0`
+    const URL = `https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5`
 
     // Send the request
     const response = await axios({
@@ -89,6 +90,8 @@ function App() {
 
     const base64data = Buffer.from(data).toString('base64')
     const img = `data:${type};base64,` + base64data // <-- This is so we can render it on the page
+
+    console.log(img);
     setImage(img)
 
     return data
@@ -108,7 +111,7 @@ function App() {
     })
 
     // Save the URL
-    const url = `https://ipfs.io/ipfs/${ipnft}/metadata.json`
+    const url = `https://${ipnft}.ipfs.dweb.link`
     setURL(url)
 
     return url
@@ -126,29 +129,26 @@ function App() {
     loadBlockchainData()
   }, [])
 
-  useEffect(() => {
-    if (nft !== null) {
-      setIsMintEnabled(true);
-    } else {
-      setIsMintEnabled(false);
-    }
-  }, [nft])
-
-
   return (
     <div>
       <Navigation account={account} setAccount={setAccount} />
 
       <div className='form'>
         <form onSubmit={submitHandler}>
+          <label htmlFor="mode">Choose a mode:</label>
+          <select name="mode" id="mode" value={mode} onChange={(event) => setMode(event.target.value)}>
+            <option value="text"> Text to image</option>
+            <option value="camera"> Camera </option>
+          </select>
           <input type="text" placeholder="Create a name..." onChange={(e) => { setName(e.target.value) }} />
           <input type="text" placeholder="Create a description..." onChange={(e) => setDescription(e.target.value)} />
-          <input type="submit" value="Create & Mint" disabled={!isMintEnabled} />
+          <input type="submit" value="Create & Mint" disabled={isWaiting || !account} />
 
         </form>
 
         <div className="image">
-          {!isWaiting && image ? (
+          <Camera />
+          {/* {!isWaiting && image ? (
             <img src={image} alt="AI generated" />
           ) : isWaiting ? (
             <div className="image__placeholder">
@@ -157,13 +157,13 @@ function App() {
             </div>
           ) : (
             <></>
-          )}
+          )} */}
         </div>
       </div>
 
       {!isWaiting && url && (
         <p>
-          View&nbsp;<a href={url} target="_blank" rel="noreferrer">Metadata</a>
+          View on&nbsp;<a href={url} target="_blank" rel="noreferrer">IPFS</a>
         </p>
       )}
     </div>
