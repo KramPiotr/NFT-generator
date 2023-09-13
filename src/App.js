@@ -27,6 +27,9 @@ function App() {
   const [message, setMessage] = useState("")
   const [isWaiting, setIsWaiting] = useState(false)
 
+  const [isMintEnabled, setIsMintEnabled] = useState(false)
+
+
   const loadBlockchainData = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum)
     setProvider(provider)
@@ -123,6 +126,15 @@ function App() {
     loadBlockchainData()
   }, [])
 
+  useEffect(() => {
+    if (nft !== null) {
+      setIsMintEnabled(true);
+    } else {
+      setIsMintEnabled(false);
+    }
+  }, [nft])
+
+
   return (
     <div>
       <Navigation account={account} setAccount={setAccount} />
@@ -131,12 +143,13 @@ function App() {
         <form onSubmit={submitHandler}>
           <input type="text" placeholder="Create a name..." onChange={(e) => { setName(e.target.value) }} />
           <input type="text" placeholder="Create a description..." onChange={(e) => setDescription(e.target.value)} />
-          <input type="submit" value="Create & Mint" />
+          <input type="submit" value="Create & Mint" disabled={!isMintEnabled} />
+
         </form>
 
         <div className="image">
           {!isWaiting && image ? (
-            <img src={image} alt="AI generated image" />
+            <img src={image} alt="AI generated" />
           ) : isWaiting ? (
             <div className="image__placeholder">
               <Spinner animation="border" />
