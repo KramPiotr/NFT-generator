@@ -15,7 +15,7 @@ import NFT from './abis/NFT.json'
 // Config
 import config from './config.json';
 
-import { client } from "@gradio/client";
+// import { client } from "@gradio/client";
 
 const TEXT_MODE_VIEW_STYLE = {
   height: 512,
@@ -67,29 +67,29 @@ function App() {
       const context = canvasElement.getContext('2d');
       context.drawImage(videoElement, 0, 0, videoElement.videoWidth, videoElement.videoHeight);
 
-      canvasElement.toBlob(async (blob) => {
-        // Send the captured image to the API for transformation
-        const app = await client("https://tencentarc-t2i-adapter-sdxl.hf.space/");
-        const result = await app.predict("/run", [
-          blob,    // Use the captured image
-          "Howdy!",
-          "Howdy!",
-          "canny",
-          "(No style)",
-          1,
-          0.1,
-          0.5,
-          0.5,
-          0,
-          true,
-        ]);
+      // canvasElement.toBlob(async (blob) => {
+      //   // Send the captured image to the API for transformation
+      //   const app = await client("https://tencentarc-t2i-adapter-sdxl.hf.space/");
+      //   const result = await app.predict("/run", [
+      //     blob,    // Use the captured image
+      //     "Howdy!",
+      //     "Howdy!",
+      //     "canny",
+      //     "(No style)",
+      //     1,
+      //     0.1,
+      //     0.5,
+      //     0.5,
+      //     0,
+      //     true,
+      //   ]);
 
-        // Display the transformed image
-        console.log(result.data);
-      });
+      //   // Display the transformed image
+      //   console.log(result.data);
+      // });
 
       // Convert the canvas content to a data URL (base64-encoded image)
-      // const photoDataUrl = canvasElement.toDataURL('image/png');
+      const photoDataUrl = canvasElement.toDataURL('image/png');
 
 
 
@@ -203,10 +203,11 @@ function App() {
 
       <div className='form'>
         <form onSubmit={submitHandler}>
-          <label htmlFor="mode">Choose a mode:</label>
+          <label htmlFor="mode">Choose the mode:</label>
           <select name="mode" id="mode" value={mode} onChange={switchMode}>
             <option value="text"> Text to image</option>
             <option value="camera"> Camera </option>
+            <option value="sketch"> Sketch</option>
           </select>
           <input type="text" placeholder="Create a name..." onChange={(e) => { setName(e.target.value) }} />
           <input type="text" placeholder="Create a description..." onChange={(e) => setDescription(e.target.value)} />
