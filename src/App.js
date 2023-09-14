@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NFTStorage, File } from 'nft.storage'
 import { Buffer } from 'buffer';
 import { ethers } from 'ethers';
@@ -15,6 +15,13 @@ import NFT from './abis/NFT.json'
 // Config
 import config from './config.json';
 
+import { client } from "@gradio/client";
+
+const TEXT_MODE_VIEW_STYLE = {
+  height: 512,
+  width: 512
+}
+
 function App() {
   const [provider, setProvider] = useState(null)
   const [account, setAccount] = useState(null)
@@ -29,6 +36,67 @@ function App() {
   const [isWaiting, setIsWaiting] = useState(false)
 
   const [mode, setMode] = useState("camera");
+
+  const [viewStyle, setViewStyle] = useState(TEXT_MODE_VIEW_STYLE);
+
+  let isCameraMode = mode === "camera";
+
+  const switchMode = (event) => {
+    const mode = event.target.value;
+    isCameraMode = mode === "camera";
+    if (!isCameraMode) {
+      setViewStyle(TEXT_MODE_VIEW_STYLE);
+    }
+    setMode(mode);
+  }
+
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+
+  const takePhoto = async () => {
+    const videoElement = videoRef.current;
+    const canvasElement = canvasRef.current;
+
+    if (videoElement && canvasElement) {
+      // Set the canvas dimensions to match the video's dimensions
+      canvasElement.width = videoElement.videoWidth;
+      canvasElement.height = videoElement.videoHeight;
+
+      // Capture a frame from the video and draw it on the canvas
+      const context = canvasElement.getContext('2d');
+      context.drawImage(videoElement, 0, 0, videoElement.videoWidth, videoElement.videoHeight);
+
+      canvasElement.toBlob(async (blob) => {
+        // Send the captured image to the API for transformation
+        const app = await client("https://tencentarc-t2i-adapter-sdxl.hf.space/");
+        const result = await app.predict("/run", [
+          blob,    // Use the captured image
+          "Howdy!",
+          "Howdy!",
+          "canny",
+          "(No style)",
+          1,
+          0.1,
+          0.5,
+          0.5,
+          0,
+          true,
+        ]);
+
+        // Display the transformed image
+        console.log(result.data);
+      });
+
+      // Convert the canvas content to a data URL (base64-encoded image)
+      // const photoDataUrl = canvasElement.toDataURL('image/png');
+
+
+
+      // Display the taken photo
+      setImage(photoDataUrl);
+    }
+  };
 
   const loadBlockchainData = async () => {
     const provider = new ethers.providers.Web3Provider(window.ethereum)
@@ -136,7 +204,7 @@ function App() {
       <div className='form'>
         <form onSubmit={submitHandler}>
           <label htmlFor="mode">Choose a mode:</label>
-          <select name="mode" id="mode" value={mode} onChange={(event) => setMode(event.target.value)}>
+          <select name="mode" id="mode" value={mode} onChange={switchMode}>
             <option value="text"> Text to image</option>
             <option value="camera"> Camera </option>
           </select>
@@ -146,18 +214,19 @@ function App() {
 
         </form>
 
-        <div className="image">
-          <Camera />
-          {/* {!isWaiting && image ? (
-            <img src={image} alt="AI generated" />
-          ) : isWaiting ? (
-            <div className="image__placeholder">
-              <Spinner animation="border" />
-              <p>{message}</p>
-            </div>
-          ) : (
-            <></>
-          )} */}
+        <div className='column-display'>
+          <div className="image" style={viewStyle}>
+            {isWaiting ?
+              (<div className="image__placeholder">
+                <Spinner animation="border" />
+                <p>{message}</p>
+              </div>) : (image ? (
+                <img style={viewStyle} src={image} alt="AI generated" />
+              ) : (isCameraMode ? <Camera videoRef={videoRef} canvasRef={canvasRef} setViewStyle={setViewStyle} /> : (<></>)))}
+          </div>
+          {!isWaiting && !image && isCameraMode && (
+            <button type="button" className="image__button" onClick={takePhoto}>Take a photo</button>
+          )}
         </div>
       </div>
 

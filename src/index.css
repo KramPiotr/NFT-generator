@@ -52,7 +52,7 @@ nav {
   font-weight: 800;
 }
 
-.nav__connect {
+.nav__connect, .image__button {
   width: 175px;
   height: 50px;
   margin: 0 auto;
@@ -71,12 +71,23 @@ nav {
   transition: all 250ms ease;
 }
 
-.nav__connect:hover {
+.nav__connect:hover, .image__button:hover {
   background-color: var(--clr-secondary);
 }
 
 /* ------------------------------------------------------ */
 /* -- FORM -- */
+
+.column-display {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.image__button {
+  margin-top: 10px;
+}
 
 .form {
   display: flex;
